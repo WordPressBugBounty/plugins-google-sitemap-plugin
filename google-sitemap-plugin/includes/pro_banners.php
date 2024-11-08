@@ -10,14 +10,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * Wrapper. Show ads for PRO on plugin settings page
- *
- * @param     string     $func        function to call
- * @param     boolean    $show_cross  when it is 'false' ad will be displayed regardless of if other blocks are closed
- * @return    void
- */
 if ( ! function_exists( 'gglstmp_pro_block' ) ) {
+	/**
+	 * Wrapper. Show ads for PRO on plugin settings page
+	 *
+	 * @param string  $func       Function to call.
+	 * @param boolean $show_cross When it is 'false' ad will be displayed regardless of if other blocks are closed.
+	 */
 	function gglstmp_pro_block( $func, $show_cross = true ) {
 		global $gglstmp_plugin_info, $wp_version, $gglstmp_options;
 		if ( ! bws_hide_premium_options_check( $gglstmp_options ) ) : ?>
@@ -53,9 +52,6 @@ if ( ! function_exists( 'gglstmp_pro_block' ) ) {
 if ( ! function_exists( 'gglstmp_frequency_block' ) ) {
 	/**
 	 * The content of ad block on the "Settings" tab
-	 *
-	 * @param     void
-	 * @return    void
 	 */
 	function gglstmp_frequency_block() {
 		?>
@@ -91,9 +87,6 @@ if ( ! function_exists( 'gglstmp_frequency_block' ) ) {
 if ( ! function_exists( 'gglstmp_extra_block' ) ) {
 	/**
 	 * The content of ad block on the "Extra settings" tab
-	 *
-	 * @param     void
-	 * @return    void
 	 */
 	function gglstmp_extra_block() {
 		?>
@@ -105,9 +98,6 @@ if ( ! function_exists( 'gglstmp_extra_block' ) ) {
 if ( ! function_exists( 'gglstmp_custom_links_block' ) ) {
 	/**
 	 * The content of ad block on the "Custom links" tab
-	 *
-	 * @param     void
-	 * @return    void
 	 */
 	function gglstmp_custom_links_block() {
 		$date = date_i18n( get_option( 'date_format' ), 1458086400 );

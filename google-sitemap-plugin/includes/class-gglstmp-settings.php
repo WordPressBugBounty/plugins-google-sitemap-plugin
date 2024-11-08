@@ -8,6 +8,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! class_exists( 'Gglstmp_Settings_Tabs' ) ) {
+	/**
+	 * Class Gglstmp_Settings_Tabs for display Settings tab
+	 */
 	class Gglstmp_Settings_Tabs extends Bws_Settings_Tabs {
 		/**
 		 * Htaccess options
@@ -93,11 +96,9 @@ if ( ! class_exists( 'Gglstmp_Settings_Tabs' ) ) {
 					'default_options' => gglstmp_get_options_default(),
 					'options'         => $gglstmp_options,
 					'tabs'            => $tabs,
-					/*pls */
 					'wp_slug'         => 'google-sitemap-plugin',
 					'link_key'        => '28d4cf0b4ab6f56e703f46f60d34d039',
 					'link_pn'         => '83',
-					/* pls*/
 					'doc_link'        => 'https://bestwebsoft.com/documentation/sitemap/sitemap-user-guide/',
 					'doc_video_link'  => 'https://www.youtube.com/watch?v=hzz0_Yj4gaQ',
 				)
@@ -258,6 +259,8 @@ if ( ! class_exists( 'Gglstmp_Settings_Tabs' ) ) {
 
 						$this->options['limit'] = ( absint( $_POST['gglstmp_limit'] ) >= 1000 && absint( $_POST['gglstmp_limit'] ) <= 50000 ) ? absint( $_POST['gglstmp_limit'] ) : 50000;
 					}
+
+					$this->options['post_limit'] = isset( $_POST['gglstmp_post_limit'] ) ? absint( $_POST['gglstmp_post_limit'] ) : 5000;
 
 					if ( ( empty( $this->options['alternate_language'] ) && isset( $_POST['gglstmp_alternate_language'] ) ) || ( ! empty( $this->options['alternate_language'] ) && ! isset( $_POST['gglstmp_alternate_language'] ) ) ) {
 						$sitemapcreate = true;
@@ -493,6 +496,13 @@ if ( ! class_exists( 'Gglstmp_Settings_Tabs' ) ) {
 							<label><input type='checkbox' name="gglstmp_split_sitemap_item[]" value="<?php echo esc_attr( $tax_key ); ?>" <?php checked( is_array( $this->options['split_sitemap_items'] ) && in_array( $tax_key, $this->options['split_sitemap_items'], true ), 1 ); ?> <?php disabled( ! in_array( $tax_key, $this->options['taxonomy'], true ), true ); ?> /><?php echo esc_html( $taxonomy ); ?></label><br />
 						<?php } ?>	
 						<span class="bws_info"><?php esc_html_e( 'Enable the items on the Structure tab to make them available.', 'google-sitemap-plugin' ); ?></span>
+					</td>
+				</tr>
+				<tr>
+					<th><?php esc_html_e( 'Items Limit', 'google-sitemap-plugin' ); ?></th>
+					<td>
+						<input type="number" name="gglstmp_post_limit" min="500" max="5000" value="<?php echo isset( $this->options['post_limit'] ) ? absint( $this->options['post_limit'] ) : 5000; ?>" step="100" /><br />
+						<span class="bws_info"><?php esc_html_e( 'The number of rows from the database when executing a request to build a sitemap', 'google-sitemap-plugin' ); ?></span>
 					</td>
 				</tr>
 				<tr>

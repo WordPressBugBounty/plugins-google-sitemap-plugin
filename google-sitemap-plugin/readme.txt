@@ -4,7 +4,7 @@ Donate link: https://bestwebsoft.com/donate/
 Tags: add pages to sitemap, add posts to sitemap, add sitemap, google, google sitemap, google sitemap plugin, sitemap file path, update sitemap, google webmaster tools, site map, sitemaps, webmaster tools
 Requires at least: 5.6
 Tested up to: 6.6
-Stable tag: 3.3.0
+Stable tag: 3.3.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -59,6 +59,7 @@ https://www.youtube.com/watch?v=CgYXKRXpj_0
 > * Configure all subsites on the network
 > * Add custom URLs to the sitemap file
 > * Change Sitemap File name
+> * Exclude taxonomies from the sitemap by word.
 > * Get answer to your support question within one business day ([Support Policy](https://bestwebsoft.com/support-policy/))
 > * Edit title and meta description [NEW]
 >
@@ -84,6 +85,15 @@ Earn 20% commission by selling the premium WordPress plugins and themes by BestW
 
 = Translation =
 
+* German (de_DE)
+* French (fr_FR)
+* Japan (ja)
+* Portugese (pt_BR)
+* Spanish (es_ES)
+* Italian (it_IT)
+* Swedish (sv_SE)
+* Norwegian (no)
+* Danish (da)
 * Czech (cs_CZ) (thanks to [Michal Kučera](mailto:kucerami@gmail.com), www.n0lim.it)
 * Russian (ru_RU)
 * Ukrainian (uk)
@@ -161,6 +171,13 @@ Please make sure that the problem hasn't been discussed yet on our forum (<https
 3. Sitemap Structure Settings.
 
 == Changelog ==
+
+= V3.3.1 - 08.11.2024 =
+* NEW : Added Item count option.
+* PRO : Exclude taxonomies from the sitemap by word.
+* Update : We updated all functionality for wordpress 6.6.2.
+* Update : BWS Panel section was updated.
+* Bugfix : Fixed small bugs.
 
 = V3.3.0 - 28.12.2023 =
 * Update : We updated all functionality for WordPress 6.4.
@@ -435,6 +452,16 @@ Please make sure that the problem hasn't been discussed yet on our forum (<https
 * New: Ability to add site in google webmaster tools, verify it and add sitemap file was added.
 
 == Upgrade Notice ==
+
+= V3.3.1  =
+* New feature added
+* The compatibility with new WordPress version updated.
+* Bugs fixed.
+
+= V3.3.0  =
+* New feature added
+* The compatibility with new WordPress version updated.
+* Bugs fixed.
 
 = V3.2.9 =
 * Plugin optimization completed.

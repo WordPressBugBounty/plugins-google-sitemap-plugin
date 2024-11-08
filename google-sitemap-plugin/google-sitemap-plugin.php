@@ -6,7 +6,7 @@ Description: Generate and add XML sitemap to WordPress website. Help search engi
 Author: BestWebSoft
 Text Domain: google-sitemap-plugin
 Domain Path: /languages
-Version: 3.3.0
+Version: 3.3.1
 Author URI: https://bestwebsoft.com/
 License: GPLv2 or later
  */
@@ -300,6 +300,7 @@ if ( ! function_exists( 'gglstmp_get_options_default' ) ) {
 			'post_type'               => array( 'page', 'post' ),
 			'taxonomy'                => array(),
 			'limit'                   => 50000,
+			'post_limit'              => 5000,
 			'sitemap_cron_delay'      => 600, /* delay in seconds to next cron */
 			'sitemaps'                => array(),
 			'alternate_language'      => 0,
@@ -432,18 +433,28 @@ if ( ! function_exists( 'gglstmp_prepare_sitemap' ) ) {
 		"
 		);
 
+		$post_status_placeholder = implode( ', ', array_fill( 0, count( (array) $post_status ), '%s' ) );
+
 		if ( ! empty( $excluded_posts ) ) {
 			while ( true ) {
 				/* exclude bbPress forums and topics */
+				$excluded_posts_placeholder = implode( ', ', array_fill( 0, count( (array) $excluded_posts ), '%d' ) );
 				$hidden_child_array = $wpdb->get_col(
-					"SELECT
-						`ID`
-					FROM $wpdb->posts
-					WHERE
-						`post_status` IN ('" . implode( "','", $post_status ) . "')
-						AND `ID` NOT IN (" . implode( ',', $excluded_posts ) . ")
-						AND `post_type` IN ('forum', 'topic', 'reply')
-						AND `post_parent` IN (" . implode( ',', $excluded_posts ) . ');'
+					$wpdb->prepare(
+						'SELECT
+							`ID`
+						FROM $wpdb->posts
+						WHERE
+							`post_status` IN (' . $post_status_placeholder . ')
+							AND `ID` NOT IN (' . $excluded_posts_placeholder . ')
+							AND `post_type` IN ("forum", "topic", "reply")
+							AND `post_parent` IN (' . $excluded_posts_placeholder . ');',
+						array(
+							$post_status,
+							$excluded_posts,
+							$excluded_posts
+						)
+					)
 				);
 
 				if ( ! empty( $hidden_child_array ) ) {
@@ -474,47 +485,55 @@ if ( ! function_exists( 'gglstmp_prepare_sitemap' ) ) {
 		$frequency = apply_filters( 'gglstmp_get_frequency', 'monthly' );
 
 		if ( ! empty( $post_types ) ) {
-			$post_status_string = "p.`post_status` IN ('" . implode( "','", (array) $post_status ) . "')";
+			$post_status_string = $wpdb->prepare(
+				' p.`post_status` IN (' . $post_status_placeholder . ')',
+				$post_status
+			);
 
 			$excluded_posts_string = '';
 			$post_types_string     = '';
 
-			$post_types_string = "AND p.`post_type` IN ('" . implode( "','", (array) $post_types ) . "')";
+			$post_types_placeholder = implode( ', ', array_fill( 0, count( (array) $post_types ), '%s' ) );
+
+			$post_types_string = $wpdb->prepare(
+				' AND p.`post_type` IN (' . $post_types_placeholder . ')',
+				$post_types
+			);
 
 			if ( ! empty( $excluded_posts ) ) {
-				$excluded_posts_string = 'AND p.`ID` NOT IN (' . implode( ',', $excluded_posts ) . ')';
+				$excluded_posts_string = ' AND p.`ID` NOT IN (' . implode( ',', $excluded_posts ) . ')';
 			}
 
 			/* Get the number of posts for sitemap */
 			$count_posts = $wpdb->query(
-				"
+				'
 				SELECT COUNT( * )
-				FROM `{$wpdb->posts}` p
-				LEFT JOIN {$wpdb->term_relationships} tr
+				FROM `' . $wpdb->posts . '` p
+				LEFT JOIN ' . $wpdb->term_relationships . ' tr
 					ON p.`ID` = tr.`object_id`
-				LEFT JOIN {$wpdb->term_taxonomy} tt
+				LEFT JOIN ' . $wpdb->term_taxonomy . ' tt
 					ON tt.`term_taxonomy_id` = tr.`term_taxonomy_id`
-				LEFT JOIN {$wpdb->terms} t
+				LEFT JOIN ' . $wpdb->terms . ' t
 					ON t.`term_id` = tt.`term_id`
 				WHERE
-					{$post_status_string}
-					{$post_types_string}
-					{$excluded_posts_string}
+					' . $post_status_string . '
+					' . $post_types_string . '
+					' . $excluded_posts_string . '
 				GROUP BY `ID`
-			"
+			'
 			);
 
 			/* Count the number of iterations needed */
-			$counter = (int) ceil( $count_posts / 5000 );
+			$counter = (int) ceil( $count_posts / $gglstmp_options['post_limit'] );
 
-			/* Loop to limit 5000 posts for iteration */
+			/* Loop to limit $gglstmp_options['post_limit'] posts for iteration */
 			for (
-					$i = 0, $offset = 0, $limit = 5000;
+					$i = 0, $offset = 0, $limit = $gglstmp_options['post_limit'];
 					$i < $counter;
-					$i++, $offset += 5000
+					$i++, $offset += $gglstmp_options['post_limit']
 			) {
 				$posts = $wpdb->get_results(
-					"SELECT
+					'SELECT
 						`ID`,
 						`post_author`,
 						`post_status`,
@@ -526,19 +545,19 @@ if ( ! function_exists( 'gglstmp_prepare_sitemap' ) ) {
 						`post_modified`,
 						`post_modified_gmt`,
 						GROUP_CONCAT(t.`term_id`) as term_id
-					FROM `{$wpdb->posts}` p
-					LEFT JOIN {$wpdb->term_relationships} tr
+					FROM `' . $wpdb->posts . '` p
+					LEFT JOIN ' . $wpdb->term_relationships . ' tr
 						ON p.`ID` = tr.`object_id`
-					LEFT JOIN {$wpdb->term_taxonomy} tt
+					LEFT JOIN ' . $wpdb->term_taxonomy . ' tt
 						ON tt.`term_taxonomy_id` = tr.`term_taxonomy_id`
-					LEFT JOIN {$wpdb->terms} t
+					LEFT JOIN ' . $wpdb->terms . ' t
 						ON t.`term_id` = tt.`term_id`
 					WHERE
-						{$post_status_string}
-						{$post_types_string}
-						{$excluded_posts_string}
+						' . $post_status_string . '
+						' . $post_types_string . '
+						' . $excluded_posts_string . '
 					GROUP BY `ID`
-					ORDER BY `post_date_gmt` DESC LIMIT {$offset}, {$limit};"
+					ORDER BY `post_date_gmt` DESC LIMIT ' . $offset . ', ' . $limit . ';'
 				);
 
 				if ( ! empty( $posts ) ) {
@@ -1829,7 +1848,8 @@ if ( ! function_exists( 'gglstmp_add_site' ) ) {
 				$gglstmp_sv_get_token_request = new Google_Service_SiteVerification_SiteVerificationWebResourceGettokenRequest();
 				$gglstmp_sv_get_token_request->setSite( $gglstmp_sv_get_token_request_site );
 				$gglstmp_sv_get_token_request->setVerificationMethod( 'META' );
-				$getToken                                    = $site_verification->webResource->getToken( $gglstmp_sv_get_token_request );
+				$getToken = $site_verification->webResource->getToken( $gglstmp_sv_get_token_request );
+
 				$gglstmp_options['site_vererification_code'] = htmlspecialchars( $getToken['token'] );
 				if ( preg_match( '|^&lt;meta name=&quot;google-site-verification&quot; content=&quot;(.*)&quot; /&gt;$|', $gglstmp_options['site_vererification_code'] ) ) {
 					update_option( 'gglstmp_options', $gglstmp_options );
