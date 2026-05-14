@@ -6,7 +6,7 @@ Description: Generate and add XML sitemap to WordPress website. Help search engi
 Author: BestWebSoft
 Text Domain: google-sitemap-plugin
 Domain Path: /languages
-Version: 3.3.5
+Version: 3.3.6
 Author URI: https://bestwebsoft.com/
 License: GPLv2 or later
  */
@@ -315,7 +315,8 @@ if ( ! function_exists( 'gglstmp_get_options_default' ) ) {
 			'split_sitemap'           => 0,
 			'split_sitemap_items'     => array(),
 			'google_news_sitemap'     => 0,
-			'google_news_post_type'   => 'post'
+			'google_news_post_type'   => 'post',
+			'post_modified_source'    => 'last_edit'
 		);
 
 		$frequency       = apply_filters( 'gglstmp_get_frequency_default', array() );
@@ -669,11 +670,17 @@ if ( ! function_exists( 'gglstmp_prepare_sitemap' ) ) {
 							}
 						}
 
+						if ( isset( $gglstmp_options['post_modified_source'] ) && 'publication_date' === $gglstmp_options['post_modified_source'] ) {
+							$date = gmdate( 'Y-m-d\TH:i:sP', strtotime( $post->post_date ) );
+						} else {
+							$date = gmdate( 'Y-m-d\TH:i:sP', strtotime( $post->post_modified ) );
+						}
+
 						if ( 1 === intval( $gglstmp_options['split_sitemap'] ) && ! empty( $gglstmp_options['split_sitemap_items'] ) && in_array( $post->post_type, $gglstmp_options['split_sitemap_items'], true ) ) {
 							/* Data for default sitemap by post type */
 							$elements[ $post->post_type ][] = array(
 								'url'       => get_permalink( $post ),
-								'date'      => gmdate( 'Y-m-d\TH:i:sP', strtotime( $post->post_modified ) ),
+								'date'      => $date,
 								'frequency' => $frequency,
 								'priority'  => $priority,
 							);
@@ -681,7 +688,7 @@ if ( ! function_exists( 'gglstmp_prepare_sitemap' ) ) {
 							/* Data for default sitemap */
 							$elements['default'][] = array(
 								'url'       => get_permalink( $post ),
-								'date'      => date( 'Y-m-d\TH:i:sP', strtotime( $post->post_modified ) ),
+								'date'      => $date,
 								'frequency' => $frequency,
 								'priority'  => $priority,
 							);
@@ -746,28 +753,43 @@ if ( ! function_exists( 'gglstmp_prepare_sitemap' ) ) {
 
 				if ( ! empty( $terms ) && ! is_wp_error( $terms ) ) {
 					foreach ( $terms as $term_value ) {
-						$modified = $wpdb->get_var(
-							$wpdb->prepare(
-								'SELECT `post_modified` 
-									FROM ' . $wpdb->posts . ', ' . $wpdb->term_relationships . ' 
-									WHERE `post_status` = "publish" 
-										AND `term_taxonomy_id` = %d 
-										AND ' . $wpdb->posts . '.ID = ' . $wpdb->term_relationships . '.object_id 
-									ORDER BY `post_modified` DESC',
-								$term_value->term_taxonomy_id
-							)
-						);
+						if ( isset( $gglstmp_options['post_modified_source'] ) && 'publication_date' === $gglstmp_options['post_modified_source'] ) {
+							$date = $wpdb->get_var(
+								$wpdb->prepare(
+									'SELECT `post_date` 
+										FROM ' . $wpdb->posts . ', ' . $wpdb->term_relationships . ' 
+										WHERE `post_status` = "publish" 
+											AND `term_taxonomy_id` = %d 
+											AND ' . $wpdb->posts . '.ID = ' . $wpdb->term_relationships . '.object_id 
+										ORDER BY `post_date` DESC',
+									$term_value->term_taxonomy_id
+								)
+							);
+						} else {
+							$date = $wpdb->get_var(
+								$wpdb->prepare(
+									'SELECT `post_modified` 
+										FROM ' . $wpdb->posts . ', ' . $wpdb->term_relationships . ' 
+										WHERE `post_status` = "publish" 
+											AND `term_taxonomy_id` = %d 
+											AND ' . $wpdb->posts . '.ID = ' . $wpdb->term_relationships . '.object_id 
+										ORDER BY `post_modified` DESC',
+									$term_value->term_taxonomy_id
+								)
+							);
+						}
+						
 						if ( 1 === intval( $gglstmp_options['split_sitemap'] ) && ! empty( $gglstmp_options['split_sitemap_items'] ) && in_array( $taxonomy, $gglstmp_options['split_sitemap_items'] ) ) {
 							$elements[ $taxonomy ][] = array(
 								'url'       => get_term_link( (int) $term_value->term_id, $taxonomy ),
-								'date'      => gmdate( 'Y-m-d\TH:i:sP', strtotime( $modified ) ),
+								'date'      => gmdate( 'Y-m-d\TH:i:sP', strtotime( $date ) ),
 								'frequency' => $frequency,
 								'priority'  => 0.8,
 							);
 						} else {
 							$elements['default'][] = array(
 								'url'       => get_term_link( (int) $term_value->term_id, $taxonomy ),
-								'date'      => gmdate( 'Y-m-d\TH:i:sP', strtotime( $modified ) ),
+								'date'      => gmdate( 'Y-m-d\TH:i:sP', strtotime( $date ) ),
 								'frequency' => $frequency,
 								'priority'  => 0.8,
 							);
@@ -927,9 +949,10 @@ if ( ! function_exists( 'gglstmp_create_sitemap' ) ) {
 						$link->setAttribute( 'hreflang', $language['lang'] );
 						$link->setAttribute( 'href', $lang_link( $args_links ) );
 					}
-
-					$lastmod = $url->appendChild( $xml->createElement( 'lastmod' ) );
-					$lastmod->appendChild( $xml->createTextNode( $element['date'] ) );
+					if ( ! isset( $gglstmp_options['post_modified_source'] ) || ( isset( $gglstmp_options['post_modified_source'] ) && 'disable' !== $gglstmp_options['post_modified_source'] ) ) {
+						$lastmod = $url->appendChild( $xml->createElement( 'lastmod' ) );
+						$lastmod->appendChild( $xml->createTextNode( $element['date'] ) );
+					}
 					$changefreq = $url->appendChild( $xml->createElement( 'changefreq' ) );
 					$changefreq->appendChild( $xml->createTextNode( $element['frequency'] ) );
 					$priority = $url->appendChild( $xml->createElement( 'priority' ) );
@@ -939,8 +962,10 @@ if ( ! function_exists( 'gglstmp_create_sitemap' ) ) {
 				$url = $urlset->appendChild( $xml->createElement( 'url' ) );
 				$loc = $url->appendChild( $xml->createElement( 'loc' ) );
 				$loc->appendChild( $xml->createTextNode( $element['url'] ) );
-				$lastmod = $url->appendChild( $xml->createElement( 'lastmod' ) );
-				$lastmod->appendChild( $xml->createTextNode( $element['date'] ) );
+				if ( ! isset( $gglstmp_options['post_modified_source'] ) || ( isset( $gglstmp_options['post_modified_source'] ) && 'disable' !== $gglstmp_options['post_modified_source'] ) ) {
+					$lastmod = $url->appendChild( $xml->createElement( 'lastmod' ) );
+					$lastmod->appendChild( $xml->createTextNode( $element['date'] ) );
+				}
 				$changefreq = $url->appendChild( $xml->createElement( 'changefreq' ) );
 				$changefreq->appendChild( $xml->createTextNode( $element['frequency'] ) );
 				$priority = $url->appendChild( $xml->createElement( 'priority' ) );

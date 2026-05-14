@@ -297,6 +297,13 @@ if ( ! class_exists( 'Gglstmp_Settings_Tabs' ) ) {
 
 					$this->options['split_sitemap_items']   = $split_items;
 					$this->options['google_news_post_type'] = $google_news_post_type;
+					
+					$post_modified_source = isset( $_POST['gglstmp_post_modified_source'] ) && in_array( sanitize_text_field( wp_unslash( $_POST['gglstmp_post_modified_source'] ) ), array( 'last_edit', 'publication_date', 'disable' ) ) ? sanitize_text_field( wp_unslash( $_POST['gglstmp_post_modified_source'] ) ) : 'last_edit';
+					if ( $post_modified_source != $this->options['post_modified_source'] ) {
+						$sitemapcreate = true;
+						$reschedule = true;
+					}
+					$this->options['post_modified_source'] = $post_modified_source;
 
 					$this->options['remove_automatic_canonical'] = isset( $_POST['gglstmp_automatic_canonical'] ) ? 1 : 0;
 					$this->options['remove_all_canonical'] = isset( $_POST['gglstmp_all_canonical'] ) ? 1 : 0;
@@ -526,6 +533,15 @@ if ( ! class_exists( 'Gglstmp_Settings_Tabs' ) ) {
 							<label><input type='checkbox' name="gglstmp_split_sitemap_item[]" value="<?php echo esc_attr( $tax_key ); ?>" <?php checked( is_array( $this->options['split_sitemap_items'] ) && in_array( $tax_key, $this->options['split_sitemap_items'], true ), 1 ); ?> <?php disabled( ! in_array( $tax_key, $this->options['taxonomy'], true ), true ); ?> /><?php echo esc_html( $taxonomy ); ?></label><br />
 						<?php } ?>	
 						<span class="bws_info"><?php esc_html_e( 'Enable the items on the Structure tab to make them available.', 'google-sitemap-plugin' ); ?></span>
+					</td>
+				</tr>
+				<tr>
+					<th><?php esc_html_e( 'Lastmod date source', 'google-sitemap-plugin' ); ?></th>
+					<td>
+						<label><input type='radio' name="gglstmp_post_modified_source" value="last_edit" <?php checked( $this->options['post_modified_source'], 'last_edit' ); ?> /><?php esc_html_e( 'Date of last editing', 'google-sitemap-plugin' ); ?></label><br />
+						<label><input type='radio' name="gglstmp_post_modified_source" value="publication_date" <?php checked( $this->options['post_modified_source'], 'publication_date' ); ?> /><?php esc_html_e( 'Publication date', 'google-sitemap-plugin' ); ?></label><br />
+						<label><input type='radio' name="gglstmp_post_modified_source" value="disable" <?php checked( $this->options['post_modified_source'], 'disable' ); ?> /><?php esc_html_e( 'Do not include the lastmod tag', 'google-sitemap-plugin' ); ?></label><br />
+						<span class="bws_info"><?php esc_html_e( 'Control what goes into the <lastmod> tag in the sitemap', 'google-sitemap-plugin' ); ?></span>
 					</td>
 				</tr>
 				<tr>

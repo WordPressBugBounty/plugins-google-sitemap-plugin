@@ -105,7 +105,9 @@
 							<th>URL</th>
 							<th>Priority</th>
 							<th>Change Frequency</th>
-							<th>LastChange (GMT)</th>
+							<xsl:if test="lastmod">
+								<th>LastChange (GMT)</th>
+							</xsl:if>
 						</tr>
 						<xsl:variable name="lower" select="'abcdefghijklmnopqrstuvwxyz'"/>
 						<xsl:variable name="upper" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"/>
@@ -128,9 +130,11 @@
 								<td>
 									<xsl:value-of select="concat(translate(substring(sitemap:changefreq, 1, 1),concat($lower, $upper),concat($upper, $lower)),substring(sitemap:changefreq, 2))"/>
 								</td>
-								<td>
-									<xsl:value-of select="concat(substring(sitemap:lastmod,0,11),concat(' ', substring(sitemap:lastmod,12,5)))"/>
-								</td>
+								<xsl:if test="lastmod">
+									<td>
+										<xsl:value-of select="concat(substring(sitemap:lastmod,0,11),concat(' ', substring(sitemap:lastmod,12,5)))"/>
+									</td>
+								</xsl:if>
 							</tr>
 						</xsl:for-each>
 					</table>
